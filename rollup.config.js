@@ -1,37 +1,21 @@
-import { resolve, dirname } from 'path';
-import { rollup } from 'rollup';
-
-let cachedOptions;
-
 function testPlugin() {
   return {
     name: 'tmp-name',
-    options(o) {
-      cachedOptions = cachedOptions || o;
-      return null;
-    },
-    resolveId(id, importer) {
+    async resolveId(id, importer) {
       if (id.startsWith('sub-build:')) {
-        const newId = resolve(dirname(importer), id.slice('sub-build:'.length));
-        console.log(importer, id.slice('sub-build:'.length), newId);
+        const newId = await this.resolveId(id.slice('sub-build:'.length), importer);
         return 'sub-build:' + newId;
       }
       return null;
     },
-    async load(id) {
+    load(id) {
       if (!id.startsWith('sub-build:')) return null;
       const input = id.slice('sub-build:'.length);
-      const opts = { ...cachedOptions, input };
-      const bundle = await rollup(opts);
-      const { output } = await bundle.generate({ format: 'esm' });
-
-      let assetId;
-
-      for (const chunkOrAsset of output) {
-        assetId = this.emitAsset(chunkOrAsset.fileName, chunkOrAsset.source || chunkOrAsset.code);
-      }
-
-      return `export default import.meta.ROLLUP_ASSET_URL_${assetId}`;
+      return `export default import(${JSON.stringify(input)}); // TROLOLOLOLOL fix this`;
+    },
+    renderChunk(code) {
+      const re = /import\((.*)\); \/\/ TROLOLOLOLOL fix this/g
+      return code.replace(re, '$1');
     }
   }
 }
@@ -40,7 +24,7 @@ const esm = {
   plugins: [testPlugin()],
   input: 'src/index.js',
   output: {
-    file: 'build/index.mjs',
+    dir: 'build/',
     format: 'esm'
   },
 };
