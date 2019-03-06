@@ -11,11 +11,11 @@ function testPlugin() {
     load(id) {
       if (!id.startsWith('sub-build:')) return null;
       const input = id.slice('sub-build:'.length);
-      return `export default import(${JSON.stringify(input)}); // TROLOLOLOLOL fix this`;
+      return `export default import(${JSON.stringify(input)}); // BWAHAHAH TOP HACKS`;
     },
     renderChunk(code) {
-      const re = /import\((.*)\); \/\/ TROLOLOLOLOL fix this/g
-      return code.replace(re, '$1');
+      const re = /import\((.*)\); \/\/ BWAHAHAH TOP HACKS/g;
+      return code.replace(re, '$1;');
     }
   }
 }
@@ -25,7 +25,8 @@ const esm = {
   input: 'src/index.js',
   output: {
     dir: 'build/',
-    format: 'esm'
+    format: 'esm',
+    entryFileNames: '[name]-[hash].js',
   },
 };
 
